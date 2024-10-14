@@ -85,6 +85,3 @@ st.subheader('Visualisasi Pairwise Relationships')
 fig6 = sns.pairplot(day, diag_kind='kde')
 st.pyplot(fig6)
 
-# Additional insights if needed
-st.subheader('Analisis Tambahan')
-st.write("Anda dapat menambahkan analisis lebih lanjut berdasarkan data yang ada.")
