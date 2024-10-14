@@ -1,86 +1,103 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Configure the Streamlit app
-st.set_page_config(page_title="Dashboard Analisis Penggunaan Sepeda", layout="wide")
+# Load dataset
+dday = pd.read_csv('./data/day.csv')
 
-# Load the dataset
-@st.cache_data
-def load_data():
-    # Update the path to match the location of your CSV file
-    return pd.read_csv('./data/day.csv')
+# Tampilkan beberapa baris awal
+st.title("Bike Usage Analysis")
+if st.checkbox("Show raw data"):
+    st.write(dday.head())
 
-day = load_data()
+# Menampilkan informasi dasar tentang dataset
+if st.checkbox("Show dataset info"):
+    buffer = io.StringIO()
+    dday.info(buf=buffer)
+    s = buffer.getvalue()
+    st.text(s)
 
-# Title of the Streamlit app
-st.title('Dashboard Analisis Penggunaan Sepeda')
+# Menampilkan statistik deskriptif untuk variabel numerik
+st.subheader("Descriptive Statistics")
+st.write(dday.describe())
 
-# Display basic dataset information
-st.subheader('Informasi Dataset')
-buffer = st.empty()
-buffer.text(day.info())  # Streamlit doesn't support .info() directly; displaying as text
+# Mengecek apakah ada nilai yang hilang
+st.subheader("Missing Values")
+st.write(dday.isnull().sum())
 
-# Display raw data
-st.subheader('Data Mentah')
-st.write(day.head())
+# Mengecek data duplikat
+st.subheader("Duplicate Rows")
+st.write(dday.duplicated().sum())
 
-# Display missing values check
-st.subheader('Cek Nilai Hilang')
-missing_values = day.isnull().sum()
-st.write(missing_values)
+# Boxplot untuk memeriksa outliers
+st.subheader("Boxplots for Numerical Columns")
+numerical_columns = ['temp', 'atemp', 'hum', 'windspeed', 'cnt']
+for col in numerical_columns:
+    plt.figure(figsize=(8, 5))
+    sns.boxplot(x=dday[col])
+    plt.title(f'Boxplot of {col}')
+    st.pyplot(plt)
 
-# Display descriptive statistics
-st.subheader('Statistik Deskriptif')
-st.write(day.describe())
+# Mengonversi kolom dteday ke format datetime
+dday['dteday'] = pd.to_datetime(dday['dteday'])
 
-# Scatter plot for temperature vs. bike usage
-st.subheader('Suhu vs. Penggunaan Sepeda')
-fig1, ax1 = plt.subplots(figsize=(10, 6))
-sns.scatterplot(data=day, x='temp', y='cnt', ax=ax1)
-ax1.set_title('Hubungan antara Suhu dan Penggunaan Sepeda', fontsize=16)
-ax1.set_xlabel('Suhu (Dinormalisasi)', fontsize=12)
-ax1.set_ylabel('Jumlah Penggunaan Sepeda', fontsize=12)
-st.pyplot(fig1)
+# Distribusi variabel numerik dengan histogram
+st.subheader("Distribution of Numerical Columns")
+for col in numerical_columns:
+    plt.figure(figsize=(8, 5))
+    sns.histplot(dday[col], kde=True)
+    plt.title(f'Distribution of {col}')
+    st.pyplot(plt)
 
-# Bar plot for bike usage by season
-st.subheader('Penggunaan Sepeda Berdasarkan Musim')
-fig2, ax2 = plt.subplots(figsize=(10, 6))
-sns.barplot(data=day, x='season', y='cnt', palette='viridis', ax=ax2)
-ax2.set_title('Penggunaan Sepeda Berdasarkan Musim', fontsize=16)
-ax2.set_xlabel('Musim', fontsize=12)
-ax2.set_ylabel('Jumlah Penggunaan Sepeda', fontsize=12)
-ax2.set_xticklabels(['Musim Semi', 'Musim Panas', 'Musim Gugur', 'Musim Dingin'], fontsize=10)
-st.pyplot(fig2)
+# Korelasi antar variabel dengan heatmap
+st.subheader("Correlation Heatmap")
+plt.figure(figsize=(10, 6))
+sns.heatmap(dday.corr(), annot=True, cmap='coolwarm')
+plt.title('Correlation Heatmap')
+st.pyplot(plt)
 
-# Histogram for the distribution of bike usage
-st.subheader('Distribusi Penggunaan Sepeda')
-fig3, ax3 = plt.subplots(figsize=(10, 6))
-sns.histplot(day['cnt'], kde=True, ax=ax3)
-ax3.set_title('Distribusi Penggunaan Sepeda', fontsize=16)
-ax3.set_xlabel('Jumlah Penggunaan Sepeda', fontsize=12)
-ax3.set_ylabel('Frekuensi', fontsize=12)
-st.pyplot(fig3)
+# Scatter plot antara suhu dan penggunaan sepeda
+st.subheader("Scatterplot: Temperature vs Bike Usage")
+plt.figure(figsize=(8, 5))
+sns.scatterplot(x=dday['temp'], y=dday['cnt'])
+plt.title('Scatterplot between Temperature and Bike Usage')
+st.pyplot(plt)
 
-# Line plot for the trend of bike usage over time
-st.subheader('Tren Penggunaan Sepeda Berdasarkan Hari')
-fig4, ax4 = plt.subplots(figsize=(10, 6))
-sns.lineplot(data=day, x='dteday', y='cnt', ax=ax4)
-ax4.set_title('Tren Penggunaan Sepeda dari Waktu ke Waktu', fontsize=16)
-ax4.set_xlabel('Tanggal', fontsize=12)
-ax4.set_ylabel('Jumlah Penggunaan Sepeda', fontsize=12)
-plt.xticks(rotation=45)
-st.pyplot(fig4)
+# Boxplot jumlah penggunaan sepeda berdasarkan musim
+season_mapping = {1: 'Winter', 2: 'Spring', 3: 'Summer', 4: 'Fall'}
+dday['season_name'] = dday['season'].map(season_mapping)
 
-# Correlation heatmap for numerical features
-st.subheader('Heatmap Korelasi Fitur Numerik')
-fig5, ax5 = plt.subplots(figsize=(12, 8))
-sns.heatmap(day.corr(), annot=True, cmap='coolwarm', ax=ax5)
-ax5.set_title('Korelasi antara Fitur Numerik', fontsize=16)
-st.pyplot(fig5)
+st.subheader("Bike Usage by Season")
+plt.figure(figsize=(8, 5))
+sns.boxplot(x='season_name', y='cnt', data=dday)
+plt.title('Bike Usage by Season')
+st.pyplot(plt)
 
-# Pairplot for visualizing pairwise relationships
-st.subheader('Visualisasi Pairwise Relationships')
-fig6 = sns.pairplot(day, diag_kind='kde')
-st.pyplot(fig6)
+# Rata-rata penggunaan sepeda berdasarkan musim
+average_usage_by_season = dday.groupby('season_name')['cnt'].mean().reset_index()
+plt.figure(figsize=(8, 5))
+sns.barplot(x='season_name', y='cnt', data=average_usage_by_season)
+plt.title('Average Bike Usage by Season')
+st.pyplot(plt)
+
+# Scatter plot untuk kelembapan dan penggunaan sepeda
+st.subheader("Scatterplot: Humidity vs Bike Usage")
+plt.figure(figsize=(8, 5))
+sns.scatterplot(x=dday['hum'], y=dday['cnt'])
+plt.title('Scatterplot between Humidity and Bike Usage')
+st.pyplot(plt)
+
+# Scatter plot untuk kecepatan angin dan penggunaan sepeda
+st.subheader("Scatterplot: Windspeed vs Bike Usage")
+plt.figure(figsize=(8, 5))
+sns.scatterplot(x=dday['windspeed'], y=dday['cnt'])
+plt.title('Scatterplot between Windspeed and Bike Usage')
+st.pyplot(plt)
+
+# Menghitung korelasi kelembapan dan kecepatan angin terhadap penggunaan sepeda
+correlation_hum_cnt = dday['hum'].corr(dday['cnt'])
+correlation_wind_cnt = dday['windspeed'].corr(dday['cnt'])
+st.write(f'Correlation between humidity and bike usage: {correlation_hum_cnt:.2f}')
+st.write(f'Correlation between windspeed and bike usage: {correlation_wind_cnt:.2f}')
