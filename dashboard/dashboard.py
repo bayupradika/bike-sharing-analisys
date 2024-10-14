@@ -84,4 +84,3 @@ st.pyplot(fig5)
 st.subheader('Visualisasi Pairwise Relationships')
 fig6 = sns.pairplot(day, diag_kind='kde')
 st.pyplot(fig6)
-
