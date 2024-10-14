@@ -3,26 +3,31 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Load dataset
-dday = pd.read_csv('data/day.csv')
+# Memuat dataset
+day = pd.read_csv('./data/day.csv')
 
-# Title of the dashboard
-st.title('Dashboard Analisis Penjualan Sepeda')
+# Judul aplikasi Streamlit
+st.title('Dashboard Analisis Penggunaan Sepeda')
 
-# Visualisasi Pertanyaan 1: Hubungan Suhu dan Jumlah Sepeda
-st.subheader('Hubungan Suhu dan Jumlah Sepeda')
-fig1, ax1 = plt.subplots(figsize=(10, 6))
-sns.scatterplot(data=dday, x='temp', y='cnt', ax=ax1)
-plt.title('Hubungan Suhu Terhadap Penggunaan Sepeda')
-plt.xlabel('Suhu')
-plt.ylabel('Jumlah Sepeda')
-st.pyplot(fig1) 
+# Menampilkan data mentah
+st.subheader('Data Mentah')
+st.write(day.head())
 
-# Visualisasi Pertanyaan 2: Penggunaan Sepeda Berdasarkan Musim
+# Scatter plot untuk suhu vs. penggunaan sepeda
+st.subheader('Suhu vs. Penggunaan Sepeda')
+fig1, ax1 = plt.subplots()
+sns.scatterplot(data=day, x='temp', y='cnt', ax=ax1)
+ax1.set_title('Hubungan antara Suhu dan Penggunaan Sepeda')
+ax1.set_xlabel('Suhu (Dinormalisasi)')
+ax1.set_ylabel('Jumlah Penggunaan Sepeda')
+st.pyplot(fig1)
+
+# Bar plot untuk penggunaan sepeda berdasarkan musim
 st.subheader('Penggunaan Sepeda Berdasarkan Musim')
-fig2, ax2 = plt.subplots(figsize=(10, 6))
-sns.barplot(data=dday, x='season', y='cnt', ax=ax2)
-plt.title('Penggunaan Sepeda Berdasarkan Musim')
-plt.xlabel('Musim')
-plt.ylabel('Jumlah Sepeda')
-st.pyplot(fig2) 
+fig2, ax2 = plt.subplots()
+sns.barplot(data=day, x='season', y='cnt', palette='viridis', ax=ax2)
+ax2.set_title('Penggunaan Sepeda Berdasarkan Musim')
+ax2.set_xlabel('Musim')
+ax2.set_ylabel('Jumlah Penggunaan Sepeda')
+ax2.set_xticklabels(['Musim Semi', 'Musim Panas', 'Musim Gugur', 'Musim Dingin'])
+st.pyplot(fig2)
